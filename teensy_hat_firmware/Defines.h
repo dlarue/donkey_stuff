@@ -8,7 +8,7 @@
 //  NOTE:  IBUS and RC modes are currently needed concurently but only one should be wired
 //  NOTE:  so leave this enabled until feature/operation is changed
 #define SUPPORT_IBUS 1
-#define IBUS_CHANS 3 //djl 10
+#define IBUS_CHANS 3 //was 10
 
 //  My HiTec servo is backwards, and uses -1. Set this to 1 for regular.
 #define STEER_MULTIPLY 1
@@ -17,20 +17,20 @@
 #define GATE_I2C_ON_RC_THROTTLE 0
 
 //  Whether to apply dead-man's grip control for serial commands
-#define GATE_SERIAL_ON_RC_THROTTLE 0  ///djl 1
+#define GATE_SERIAL_ON_RC_THROTTLE 0  //was 1
 
 //  PWM values are between 1000 and 2000, with 1500 meaning "zero"
 
 //  Limit the throttle, so that kiddos don't go too crazy.
-#define MIN_THROTTLE 1300
-#define MAX_THROTTLE 1700
+#define MIN_THROTTLE 1000
+#define MAX_THROTTLE 2000
 #define THROTTLE_ADJUSTMENT 0
 
 //  Slightly limit steering to prevent the servo from bottoming out.
-#define MIN_STEER 1100
-#define MAX_STEER 1900
-//  My steering is slightly off to the left, so compensate.
-#define STEER_ADJUSTMENT 14
+#define MIN_STEER 1000 //was 1100
+#define MAX_STEER 2000 //was 1900
+//  If steering is slightly off to the left, compensate.
+#define STEER_ADJUSTMENT 0 //was 14
 
 #define PIN_STEER_IN    11
 #define PIN_THROTTLE_IN 12

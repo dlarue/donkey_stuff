@@ -26,8 +26,8 @@ uint32_t lastVescThrottle;
 #endif
 
 #if defined(SUPPORT_IBUS)
-uint16_t iBusInput[IBUS_CHANS]; //djl [10];
-FlySkyIBus fsIbus(IBUS_SERIAL, iBusInput, IBUS_CHANS); //djl 10);
+uint16_t iBusInput[IBUS_CHANS]; //was [10];
+FlySkyIBus fsIbus(IBUS_SERIAL, iBusInput, IBUS_CHANS); //was 10);
 #endif
 
 PCA9685Emulator pwmEmulation;
@@ -48,7 +48,7 @@ uint16_t serialThrottle;
 
 uint16_t hackSteerSmooth = 1500;
 
-bool serialEchoEnabled = true;  //djl
+bool serialEchoEnabled = true;  //was false
 char const *driveModeStr = "";
 float lastReadVoltage;
 
@@ -319,7 +319,7 @@ void generate_output(uint32_t now) {
   uint16_t throttle = 1500;
   bool autoSource = false;
 
-//djl disabling mode button swapping control to direct RC bypass control
+//was disabling mode button swapping control to direct RC bypass control
   /*if (lastInputTime && ((iBusInput[2] > 1800) || (iBusInput[IBUS_CHANS-1] > 1800))) {
     //  if aux channel is high, or tenth channel (right switch on FSi6) is set,
     //  just drive, without auto.
