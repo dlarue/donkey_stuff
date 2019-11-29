@@ -46,6 +46,7 @@
 #define RPI_SERIAL Serial   //  USB
 #define RPI_BAUD_RATE 115200
 #define RPI_JOYSTICK  1  // /dev/inputs/js0 emulate a 3 channel joystick HiD device
+#define ACTIVE_BTN_CT 2  // 1= Jbutton1 followed chan3 button, 2=Jbutton1 pulsed on short press, Jbutton2 pulsed on Long press
 
 #define IBUS_SERIAL Serial1
 

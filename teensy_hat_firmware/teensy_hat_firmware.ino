@@ -13,9 +13,9 @@
 
 #if FULL_FIRMWARE
 
-PinPulseIn<11> rcSteer;     //PIN_STEER_IN
-PinPulseIn<12> rcThrottle;  //PIN_THROTTLE_IN
-PinPulseIn<13> rcMode;      //PIN_MODE_IN
+PinPulseIn<PIN_STEER_IN> rcSteer;        //PIN_STEER_IN 11
+PinPulseIn<PIN_THROTTLE_IN> rcThrottle;  //PIN_THROTTLE_IN 12
+PinPulseIn<PIN_MODE_IN> rcMode;          //PIN_MODE_IN 13
 
 Servo svoSteer;
 Servo svoThrottle;
@@ -452,25 +452,102 @@ void update_serial(uint32_t now) {
   }
 }
 
+// Static vars for button presses and simulation
 uint32_t lastJoystickWrite = 0;
+uint32_t btnPressedTime = 0;//now;
+static bool cycleJBtn1 = false;
+static bool cycleJBtn2 = false;
+static uint32_t btnCycleTimer = 0;
+bool btnPress = false;
+
+// 
+// We only update the joystick set values every 32 milli-seconds
 void update_joystick(uint32_t now) {
+  
   if (now - lastJoystickWrite > 32) {
-    lastJoystickWrite = now;
+    lastJoystickWrite = millis(); // reset the counter
      // read 6 analog inputs and use them for the joystick axis
     Joystick.X(map(iBusInput[0],1000, 2000, 0, 1023)); //2000-1000 cw=right, 1000-2000 cw=left
     Joystick.Y(map(iBusInput[1],1000, 2000, 0, 1023));  //2000-1000 pull=up,  1000-2000 pull=down
 
-    //Serial.print("button=");Serial.println(iBusInput[2]);  
-    if(iBusInput[2] < 1500 ) { // button default un-pushed. value is 1000 +/-10
-     Joystick.button(1, 0);//map(iBusInput[2],1000, 2000, 0, 1023));//iBusInput[2]*1);//(1, 1); // 1=on
-     Joystick.button(2, 0);//map(iBusInput[2],2000, 1000, 0, 1023));//iBusInput[2]*-1);//(2, 0); // 0=off
-     }
-  else {  // (is > 1100,  button pressed.  value is 2000 +/-10
-     Joystick.button(1, 1); //map(iBusInput[2],2000, 1000, 0, 1023));//iBusInput[2]*-1);//(1, 0); 
-     Joystick.button(2, 0); //map(iBusInput[2],1000, 2000, 0, 1023));//iBusInput[2]*1);//(2, 1);
-     }      
-  }
-}
+    //Serial.print("button=");Serial.println(iBusInput[2]);
+    if( ACTIVE_BTN_CT == 1 ) {
+      if(iBusInput[2] < 1500 ) { // button default un-pushed. value is 1000 +/-10
+        Joystick.button(1, 0);//map(iBusInput[2],1000, 2000, 0, 1023));//iBusInput[2]*1);//(1, 1); // 1=on
+        Joystick.button(2, 0);//map(iBusInput[2],2000, 1000, 0, 1023));//iBusInput[2]*-1);//(2, 0); // 0=off
+      }
+      else {  // (is > 1100,  button pressed.  value is 2000 +/-10
+        Joystick.button(1, 1); //map(iBusInput[2],2000, 1000, 0, 1023));//iBusInput[2]*-1);//(1, 0); 
+        Joystick.button(2, 0); //map(iBusInput[2],1000, 2000, 0, 1023));//iBusInput[2]*1);//(2, 1);
+      }      
+    } // end act btn ct = 1
+    if( ACTIVE_BTN_CT == 2 ) {
+      // *** handle 
+      //Design: a short press(1000-> more than 1500(1Sec or less) -> 1000) is button 1 press/release
+      //        a long press( 1000-> more than 1500(2Sec or more) -> 1000) is a button 2 press/release
+      if( btnPress == true ) {
+        if(iBusInput[2] < 1500 ) { // button un-pushedif
+          //test for how long since it was pressed
+          // if pressed for < 2 seconds
+          if( (now - btnPressedTime) < 1*1000 ) 
+            cycleJBtn1 = true;
+          // if pressed for > 2 seconds  
+          if( (now - btnPressedTime) > 1*1000 )
+            cycleJBtn2 = true;
+        btnPress = false;
+        }
+      } //btnPress
+      simulateJBtnPush(now);
+    } // end act btn ct = 2
+  } // end of 32 milli-second timer         
+} // end update_joystick
+
+void simulateJBtnPush(uint32_t now){  
+    // handle simulated momentary button 1 or 2 press/release cycle( 200mS? )
+    if( cycleJBtn1 || cycleJBtn2 ) {
+      // Button 1
+      if( cycleJBtn1 ) {
+        if( btnCycleTimer == 0 ){
+          //set jBtn1 on
+          Joystick.button(1, 1); // 1=on
+          //start timer
+          btnCycleTimer = now;
+        } else {
+          // if button level on > 200 mSec
+          if( (now-btnCycleTimer) > 200 ){
+            //set jBtn1 off
+            Joystick.button(1, 0); // 0=off
+            btnCycleTimer = 0; //clear timer
+            cycleJBtn1 = false;
+          }
+        }
+      } // end cycleBtn1 true
+      // Button 2
+      if( cycleJBtn2 ) {
+        if( btnCycleTimer == 0 ){
+          //set jBtn2 on
+          Joystick.button(2, 1); // 1=on
+          //start timer
+          btnCycleTimer = now;
+        } else {
+          // if button level on > 200 mSec
+          if( (now-btnCycleTimer) > 200 ){
+            //set jBtn2 off
+            Joystick.button(2, 0); // 0=off
+            btnCycleTimer = 0; //clear timer
+            cycleJBtn2 = false;
+          }
+        }
+      } // end cycleBtn2 true
+    } // end  btn1 or btn2 cycle
+    else {
+      // if not simulated button actions active and btnPressed false then set true
+         if((iBusInput[2] > 1500) && !btnPress ){
+           btnPress=true;
+           btnPressedTime = now;
+         }
+    }
+} //end simulateJBtnPush()              
 
 void loop() {
   
